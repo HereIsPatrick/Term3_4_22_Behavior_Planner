@@ -29,7 +29,6 @@ Vehicle::~Vehicle() {}
 
 vector<Vehicle> Vehicle::choose_next_state(map<int, vector<Vehicle>> predictions) {
     /*
-
     ***Here you can implement the transition_function code from the Behavior Planning Pseudocode
     classroom concept.***
 
@@ -49,10 +48,30 @@ vector<Vehicle> Vehicle::choose_next_state(map<int, vector<Vehicle>> predictions
        cost.cpp, computes the cost for a trajectory.
     */
 
-    //TODO: Your solution here.
+    // Step. 找出可能可以運作的的狀態
+    vector<string> states = successor_states();
+    vector<float> costs;
 
-    //TODO: Change return value here:
-    return generate_trajectory("KL", predictions);
+    vector<float> final_states;
+    vector<vector<Vehicle>> final_trajectories;
+
+    for(vector<string>::iterator it=states.begin(); it!=states.end(); ++it )
+    {
+        // Step. 根據預測，算出可以走的路徑
+        vector<Vehicle> trajectory = generate_trajectory(*it, predictions);
+        if(trajectory.size() !=0)
+        {
+            // Step. 根據路徑，算出成本
+            float cost = calculate_cost(*this, predictions, trajectory);
+            costs.push_back(cost);
+            final_trajectories.push_back(trajectory);
+        }
+    }
+
+    // Step. 找出最小成查的路徑
+    vector<float>::iterator minimum_cost = min_element(costs.begin(), costs.end());
+    int minimum_idx = distance(begin(costs), minimum_cost);
+    return final_trajectories[minimum_idx];
 }
 
 vector<string> Vehicle::successor_states() {
@@ -210,10 +229,12 @@ vector<Vehicle> Vehicle::lane_change_trajectory(string state, map<int, vector<Ve
     return trajectory;
 }
 
+// 置入該台車在t=1秒後的位置
 void Vehicle::increment(int dt = 1) {
     this->s = position_at(dt);
 }
 
+// 計算經過step t時，所在的位置
 float Vehicle::position_at(int t) {
     return this->s + this->v*t + this->a*t*t/2.0;
 }
@@ -261,6 +282,7 @@ vector<Vehicle> Vehicle::generate_predictions(int horizon) {
     Generates predictions for non-ego vehicles to be used
     in trajectory generation for the ego vehicle.
     */
+    // Step. 預測每台車，下兩次會在的位置(ex horizon=2)的關係
     vector<Vehicle> predictions;
     for(int i = 0; i < horizon; i++) {
         float next_s = position_at(i);

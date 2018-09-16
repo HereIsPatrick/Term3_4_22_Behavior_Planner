@@ -23,7 +23,6 @@ Road::Road(int speed_limit, double traffic_density, vector<int> lane_speeds) {
 Road::~Road() {}
 
 Vehicle Road::get_ego() {
-
     return this->vehicles.find(this->ego_key)->second;
 }
 
@@ -53,12 +52,16 @@ void Road::populate_traffic() {
         }
     }
 
+    ostringstream oss;
+    oss << "Vehicle number : " << this->vehicles.size() << endl;
+
 }
 
 void Road::advance() {
 
     map<int ,vector<Vehicle> > predictions;
 
+    // Step . 預測下一個Step, 每台車的位子
     map<int, Vehicle>::iterator it = this->vehicles.begin();
     while(it != this->vehicles.end())
     {
@@ -67,16 +70,19 @@ void Road::advance() {
         predictions[v_id] = preds;
         it++;
     }
+
     it = this->vehicles.begin();
     while(it != this->vehicles.end())
     {
         int v_id = it->first;
         if(v_id == ego_key)
         {
+            // Step. 我們控制的車ego，根據其它車的預測，來找出我們的trajectory.
             vector<Vehicle> trajectory = it->second.choose_next_state(predictions);
             it->second.realize_next_state(trajectory);
         }
         else {
+            // Step. 把每台車往前移動一個位置
             it->second.increment(1);
         }
         it++;
@@ -87,6 +93,7 @@ void Road::advance() {
 
 void Road::add_ego(int lane_num, int s, vector<int> config_data) {
 
+    // Step 1. 加入主控的車子前，先把random產生的車陣中，那一台先移除
     map<int, Vehicle>::iterator it = this->vehicles.begin();
     while(it != this->vehicles.end())
     {
@@ -98,6 +105,8 @@ void Road::add_ego(int lane_num, int s, vector<int> config_data) {
         }
         it++;
     }
+
+    // Step 2. 加入主控的車子ego.
     Vehicle ego = Vehicle(lane_num, s, this->lane_speeds[lane_num], 0);
     ego.configure(config_data);
     ego.state = "KL";

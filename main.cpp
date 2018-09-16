@@ -11,6 +11,7 @@ using namespace std;
 int SPEED_LIMIT = 10;
 
 //all traffic in lane (besides ego) follow these speeds
+// Lane 0 為速度6，最慢
 vector<int> LANE_SPEEDS = {6,7,8,9};
 
 //Number of available "cells" which should have traffic
@@ -33,6 +34,7 @@ int main() {
 
 	road.update_width = AMOUNT_OF_ROAD_VISIBLE;
 
+	// Step. 產生其它的車子，在這路上
 	road.populate_traffic();
 
 	int goal_s = GOAL[0];
@@ -41,8 +43,11 @@ int main() {
 	//configuration data: speed limit, num_lanes, goal_s, goal_lane, max_acceleration
 
 	int num_lanes = LANE_SPEEDS.size();
+
+    // Step . 從2號Lane移到0號Lane, 在300公尺內要走到
 	vector<int> ego_config = {SPEED_LIMIT,num_lanes,goal_s,goal_lane,MAX_ACCEL};
 
+	// 起始在Lane 2, S為0的地點
 	road.add_ego(2,0, ego_config);
 	int timestep = 0;
 
